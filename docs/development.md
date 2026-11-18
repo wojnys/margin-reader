@@ -182,6 +182,8 @@ tests/                       # isolated backend, contract, and migration checks
 
 The root `pyproject.toml` and `uv.lock` manage the Python application, worker, migrations, and tests together. This keeps one environment and avoids duplicate project configuration. The two old executable paths (`backend.main:app`, `python -m backend.worker`) remain tiny compatibility entry points.
 
+uv uses copy mode for package installation. NLTK's filesystem checks reject multiply-linked resource files, which can otherwise occur when Linux installations hardlink package data from the uv cache. Copy mode preserves those checks and makes fresh installations portable.
+
 Routers handle HTTP only. Services own business rules and transaction commits through `UnitOfWork`; repositories contain SQLAlchemy queries and flush changes without committing. A request shares one session across its repositories, allowing an upload and phone-link claim to commit atomically. The worker releases its database session before awaiting DeepInfra.
 
 BasedPyright checks all application code in **strict** mode, including `reportAny` and `reportExplicitAny`. Ruff enforces function annotations with `ANN`, linting, imports, and formatting. Local variable types may be inferred. Two narrow, commented type-check exceptions adapt untyped ASGI/socket interfaces; business logic does not use blanket ignores. Pydantic validates HTTP inputs, response contracts, and AI outputs at runtime. Install the recommended BasedPyright and Ruff editor extensions for immediate feedback.
