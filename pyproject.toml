@@ -1,0 +1,56 @@
+[project]
+name = "margin-reader"
+version = "0.1.0"
+description = "A local English reading companion for Czech learners"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "sqlalchemy>=2.0,<3",
+  "alembic>=1.15,<2",
+  "pydantic-settings>=2.8,<3",
+  "pydantic-ai-slim[openai]>=1.0,<3",
+  "temporalio>=1.10,<2",
+  "python-multipart>=0.0.20",
+  "pillow>=11,<13",
+  "psycopg[binary]>=3.2,<4",
+  "rapidocr>=3.10.0",
+  "onnxruntime>=1.31.1",
+  "llama-index-core>=0.14.25",
+  "neo4j>=6.4.1",
+  "pgvector>=0.5.1",
+  "sentence-transformers>=6.3.0",
+  "tiktoken>=0.14.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "pytest-asyncio>=0.26,<2",
+    "httpx>=0.28,<1",
+    "ruff>=0.11,<1",
+    "basedpyright>=1.40.2",
+    "watchfiles>=1.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "ANN"]
+ignore = ["E501"]
+
+[tool.basedpyright]
+include = ["backend/app"]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+reportAny = "error"
+reportExplicitAny = "error"

@@ -1,0 +1,62 @@
+x-temporal-image: &temporal-image temporalio/temporal@sha256:003508da05989e7cf0d583cfce521c4bb2732e733574e3040db8f1284783baa2
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    restart: unless-stopped
+    # Public development credentials for this loopback-only local container.
+    # Production deployments must supply their own secrets and access policy.
+    environment:
+      POSTGRES_USER: margin
+      POSTGRES_PASSWORD: margin_local_dev
+      POSTGRES_DB: margin
+    ports:
+      - "127.0.0.1:5437:5432"
+    volumes:
+      # PostgreSQL 18+ uses a versioned PGDATA beneath this directory.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U margin -d margin"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    shm_size: 128mb
+  neo4j:
+    image: neo4j:2026.10.2-community
+    restart: unless-stopped
+    environment:
+      # Public development-only password; configure the matching private application setting manually.
+      NEO4J_AUTH: neo4j/margin_graph_dev
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  temporal-init:
+    image: *temporal-image
+    user: "0:0"
+    entrypoint: ["sh", "-c", "chown temporal:temporal /data"]
+    volumes:
+      - temporal-data:/data
+  temporal:
+    image: *temporal-image
+    depends_on:
+      temporal-init:
+        condition: service_completed_successfully
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--ui-ip", "0.0.0.0", "--db-filename", "/data/temporal.db"]
+    ports:
+      - "127.0.0.1:7323:7233"
+      - "127.0.0.1:8323:8233"
+    volumes:
+      - temporal-data:/data
+volumes:
+  neo4j-data:
+  postgres-data:
+  temporal-data:

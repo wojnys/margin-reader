@@ -1,0 +1,26 @@
+name: Checks
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --locked
+      - run: uv run --locked ruff check backend/app
+      - run: uv run --locked ruff format --check backend/app
+      - run: uv run --locked basedpyright
+      - run: uv run --locked pytest -q
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run api:check
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
